@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - JWT Auth</title>
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Bootstrap for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function LoginPage() {
+            const [formData, setFormData] = useState({
+                userName: '',
+                password: ''
+            });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [tokenData, setTokenData] = useState(null);
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+                // Clear errors when user starts typing
+                if (error) setError('');
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                setSuccess('');
+
+                try {
+                    const response = await fetch('/auth/v1/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Login successful:', data);
+                        
+                        // Store tokens in localStorage (optional)
+                        localStorage.setItem('accessToken', data.accessToken);
+                        localStorage.setItem('refreshToken', data.token);
+                        
+                        setTokenData(data);
+                        setSuccess('Login successful! Welcome back.');
+                        
+                        // You can redirect or update UI here
+                        // window.location.href = '/dashboard'; // Example redirect
+                        
+                    } else {
+                        const errorText = await response.text();
+                        setError(errorText || 'Login failed. Please check your credentials.');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    setError('Network error. Please check your connection and try again.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                setTokenData(null);
+                setSuccess('');
+                setFormData({ userName: '', password: '' });
+            };
+
+            // If user is logged in, show success state
+            if (tokenData) {
+                return (
+                    <div className="login-card">
+                        <div className="login-header">
+                            <h2>🎉 Login Successful!</h2>
+                            <p className="mb-0">Welcome back</p>
+                        </div>
+                        <div className="p-4">
+                            <div className="success-message">
+                                <strong>Login Details:</strong>
+                                <br />
+                                <small>User: {formData.userName}</small>
+                                <br />
+                                <small>Token received and stored</small>
+                            </div>
+                            
+                            <div className="mb-3">
+                                <strong>Access Token (first 50 chars):</strong>
+                                <br />
+                                <small className="text-muted font-monospace">
+                                    {tokenData.accessToken.substring(0, 50)}...
+                                </small>
+                            </div>
+                            
+                            <div className="mb-3">
+                                <strong>Refresh Token (first 20 chars):</strong>
+                                <br />
+                                <small className="text-muted font-monospace">
+                                    {tokenData.token.substring(0, 20)}...
+                                </small>
+                            </div>
+
+                            <div className="text-center">
+                                <button 
+                                    className="btn btn-outline-secondary"
+                                    onClick={handleLogout}
+                                >
+                                    Login Again
+                                </button>
+                            </div>
+                            
+                            <div className="mt-3 text-center">
+                                <small className="text-muted">
+                                    Tokens are stored in localStorage
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="login-card">
+                    <div className="login-header">
+                        <h2>🔐 Login</h2>
+                        <p className="mb-0">Enter your credentials</p>
+                    </div>
+                    
+                    <div className="p-4">
+                        {error && (
+                            <div className="alert alert-danger">
+                                <strong>Error:</strong> {error}
+                            </div>
+                        )}
+                        
+                        {success && (
+                            <div className="alert alert-success">
+                                <strong>Success:</strong> {success}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label htmlFor="userName" className="form-label">
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    className="form-control"
+                                    id="userName"
+                                    name="userName"
+                                    value={formData.userName}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your email"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label htmlFor="password" className="form-label">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    id="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your password"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            
+                            <button 
+                                type="submit" 
+                                className="btn-login"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        Signing In...
+                                    </>
+                                ) : (
+                                    'Sign In'
+                                )}
+                            </button>
+                        </form>
+                        
+                        <div className="mt-4 text-center">
+                            <small className="text-muted">
+                                Test Credentials:<br />
+                                Email: test@example.com<br />
+                                Password: password123
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<LoginPage />, document.getElementById('root'));
+    </script>
+</body>
+</html>
