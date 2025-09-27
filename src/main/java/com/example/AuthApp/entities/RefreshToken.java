@@ -1,10 +1,12 @@
 package com.example.AuthApp.entities;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,7 @@ public class RefreshToken {
 	
 	private String token;
 	
+	@Column(columnDefinition = "TIMESTAMP")
 	private Instant expriry_date;
 	
 	@OneToOne

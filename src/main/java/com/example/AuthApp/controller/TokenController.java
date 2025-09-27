@@ -36,7 +36,7 @@ public class TokenController {
 	
 	@PostMapping("auth/v1/login")
 	public ResponseEntity AuthenticateAndGetToken(@RequestBody AuthRequestDTO authRequestDTO){
-		
+		System.out.println("i am in login");
 		Authentication authentication = authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(authRequestDTO.getUserName(), authRequestDTO.getPassword()));
 		if (authentication.isAuthenticated()) {
 			RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequestDTO.getUserName());
