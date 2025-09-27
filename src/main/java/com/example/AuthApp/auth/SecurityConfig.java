@@ -52,11 +52,24 @@ public class SecurityConfig {
 	      .csrf(csrf -> csrf.disable())                    // JWT + stateless => CSRF off
 	      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	      .authorizeHttpRequests(auth -> auth
+	    		// API end points
 	          .requestMatchers(
 	              "/auth/v1/login",
 	              "/auth/v1/refreshToken",
 	              "/auth/v1/signup"
 	          ).permitAll()
+	          // Static resources - ADD THESE LINES
+	            .requestMatchers(
+	                "/",
+	                "/login.html",
+	                "/index.html",
+	                "/**/*.html",
+	                "/**/*.css",
+	                "/**/*.js",
+	                "/**/*.png",
+	                "/**/*.jpg",
+	                "/**/*.ico"
+	            ).permitAll()
 	          .anyRequest().authenticated()
 	      )
 	      .authenticationProvider(authenticationProvider())
